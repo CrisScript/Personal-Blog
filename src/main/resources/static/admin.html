@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Admin</title>
+    <link rel="stylesheet" href="/css/wecore.css">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+</head>
+<body class="matrix">
+<header class="nav">
+    <div class="brand"><a href="/">Binary Brains</a></div>
+    <nav><a href="/">Inicio</a></nav>
+</header>
+
+<main class="container">
+    <section class="hero">
+        <h1>Admin</h1>
+        <p>Crear/editar/borrar artículos.</p>
+    </section>
+
+    <section class="article" style="margin-top:18px">
+        <form id="f">
+            <label>Título</label>
+            <input class="input" name="title" required />
+            <label style="margin-top:12px;display:block">Resumen</label>
+            <input class="input" name="summary"/>
+            <label style="margin-top:12px;display:block">Contenido (HTML)</label>
+            <textarea class="input" name="content" rows="12"></textarea>
+            <div style="margin-top:14px">
+                <button class="button" type="submit">Guardar</button>
+            </div>
+        </form>
+    </section>
+
+    <section class="article" style="margin-top:18px">
+        <h2>Artículos</h2>
+        <div id="list" class="feed"></div>
+    </section>
+</main>
+
+<script>
+    const listEl = document.getElementById('list');
+
+    async function load() {
+        const res = await fetch('/api/articles');
+        const items = await res.json();
+        if (!items.length) {
+            listEl.innerHTML = '<div class="card"><p class="excerpt">No hay artículos.</p></div>';
+            return;
+        }
+        listEl.innerHTML = items.map(a => `
+      <article class="card">
+        <h2>${a.title}</h2>
+        <div class="meta">${(a.publishedAt||'').slice(0,10)} — <code>${a.id}</code></div>
+        <div style="display:flex; gap:8px; margin-top:8px">
+          <a class="button" href="/article.html?id=${encodeURIComponent(a.id)}" target="_blank">Ver</a>
+          <button class="button" data-del="${a.id}">Borrar</button>
+        </div>
+      </article>
+    `).join('');
+    }
+
+    listEl.addEventListener('click', async (e)=>{
+        const id = e.target?.dataset?.del;
+        if(!id) return;
+        if(!confirm('¿Borrar este artículo?')) return;
+        const res = await fetch(`/api/articles/${encodeURIComponent(id)}`, { method:'DELETE' });
+        if (res.ok) load();
+        else alert('Error al borrar');
+    });
+
+    document.getElementById('f').addEventListener('submit', async (e)=>{
+        e.preventDefault();
+        const data = Object.fromEntries(new FormData(e.target).entries());
+        data.publishedAt = new Date().toISOString();
+        const res = await fetch('/api/articles', {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body: JSON.stringify(data)
+        });
+        if(res.ok){ e.target.reset(); load(); }
+        else{ alert('Error guardando'); }
+    });
+
+    load();
+</script>
+</body>
+</html>

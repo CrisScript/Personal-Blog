@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Personal Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/wecore.css">
+</head>
+<body class="matrix">
+<header class="nav">
+    <div class="brand">Binary Brains</div>
+    <nav>
+        <a href="/">Inicio</a>
+        <a href="/admin.html">Admin</a>
+    </nav>
+</header>
+
+<main class="container">
+    <section class="hero">
+        <h1 class="glitch">Personal Blog</h1>
+        <p>Blog de Cris.</p>
+    </section>
+
+    <section id="feed" class="feed" aria-live="polite"></section>
+</main>
+
+<footer class="footer">© <span id="y"></span> — personal-blog <span class="tag">v0.1</span></footer>
+
+<script>
+    document.getElementById('y').textContent = new Date().getFullYear();
+    fetch('/api/articles')
+        .then(r => r.json())
+        .then(list => {
+            const feed = document.getElementById('feed');
+            if (!list.length) {
+                feed.innerHTML = '<div class="card"><p class="excerpt">No hay artículos aún.</p></div>';
+                return;
+            }
+            feed.innerHTML = list.map(a => `
+        <article class="card">
+          <h2><a href="/article.html?id=${encodeURIComponent(a.id)}">${a.title}</a></h2>
+          <div class="meta">${(a.publishedAt||'').slice(0,10)}</div>
+          <p class="excerpt">${a.summary ?? ''}</p>
+        </article>
+      `).join('');
+        })
+        .catch(e => {
+            document.getElementById('feed').innerHTML =
+                '<div class="card"><p class="excerpt">Error cargando artículos.</p></div>';
+            console.error(e);
+        });
+</script>
+</body>
+</html>

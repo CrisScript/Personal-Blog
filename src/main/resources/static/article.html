@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Artículo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/wecore.css">
+</head>
+<body class="matrix">
+<header class="nav">
+    <div class="brand"><a href="/">Binary Brains</a></div>
+    <nav><a href="/">Inicio</a></nav>
+</header>
+
+<main class="container">
+    <article class="article">
+        <h1 id="title" class="glitch">...</h1>
+        <div id="date" class="meta">...</div>
+        <div id="content" class="content">Cargando…</div>
+    </article>
+</main>
+
+<footer class="footer">← <a href="/">Volver</a></footer>
+
+<script>
+    const params = new URLSearchParams(location.search);
+    const id = params.get('id');
+    if(!id){ location.href = '/'; }
+
+    fetch(`/api/articles/${encodeURIComponent(id)}`)
+        .then(r => r.ok ? r.json() : Promise.reject(r.status))
+        .then(a => {
+            document.title = a.title + ' | Personal Blog';
+            document.getElementById('title').textContent = a.title;
+            document.getElementById('date').textContent = (a.publishedAt||'').slice(0,10);
+
+            document.getElementById('content').innerHTML = a.content || '';
+        })
+        .catch(e => {
+            document.getElementById('content').textContent = 'No encontrado.';
+            console.error(e);
+        });
+</script>
+</body>
+</html>
